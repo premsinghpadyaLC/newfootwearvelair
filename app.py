@@ -3,6 +3,21 @@ import pandas as pd
 import datetime
 import os
 from fpdf import FPDF
+import urllib.request
+
+FONT_PATH = 'DejaVuSans.ttf'
+
+def download_font():
+    url = 'https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf'
+    if not os.path.exists(FONT_PATH):
+        st.info("Downloading font file for Unicode support...")
+        try:
+            urllib.request.urlretrieve(url, FONT_PATH)
+            st.success("Font downloaded successfully.")
+        except Exception as e:
+            st.error(f"Failed to download font file: {e}")
+
+download_font()
 
 # CONFIGURATION
 DATA_PATH = 'data/inventory.csv'
