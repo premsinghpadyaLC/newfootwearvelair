@@ -1,7 +1,6 @@
-Item,Category,Stock,Price
-Men's Shoes,Footwear,30,999
-Women's Shoes,Footwear,20,899
-Kids Shoes,Footwear,15,499
-Basmati Rice,Grains,40,60
-Sona Masoori,Grains,25,45
-Toor Dal,Pulses,35,90
+Item,Stock,Price
+Men's Sports Shoes,50,799
+Women's Flats,70,499
+Children's Sandals,40,299
+Basmati Rice 5kg,100,450
+Toor Dal 1kg,80,110
