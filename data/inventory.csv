@@ -1,6 +1,4 @@
-Item,Stock,Price
-Men Shoes,50,999
-Women Sandals,40,799
-Kids Sneakers,30,599
-Basmati Rice (5kg),25,650
-Toor Dal (1kg),50,110
+Item,Price,Stock
+Rice Bag 25kg,500,20
+Shoes Size 9,800,10
+Slippers Size 6,250,15
