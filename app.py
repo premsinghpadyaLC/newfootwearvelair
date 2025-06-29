@@ -3,19 +3,17 @@ import pandas as pd
 import datetime
 import os
 from fpdf import FPDF
-import streamlit as st
 import urllib.request
-import os
 
-# Constants
+# -------------------- FONT SETUP --------------------
 FONT_DIR = "fonts"
 FONT_NAME = "DejaVuSans.ttf"
 FONT_PATH = os.path.join(FONT_DIR, FONT_NAME)
 
-# Make sure font directory exists
+# Create font folder if needed
 os.makedirs(FONT_DIR, exist_ok=True)
 
-# Function to download the font if not already present
+# Download TTF font if not exists
 def download_font():
     if not os.path.exists(FONT_PATH):
         st.info("Downloading Unicode font for invoice generation...")
@@ -30,35 +28,31 @@ def download_font():
 
 download_font()
 
-# CONFIGURATION
+# -------------------- CONFIG --------------------
 DATA_PATH = 'data/inventory.csv'
 ORDER_PATH = 'data/orders.csv'
 INVOICE_PATH = 'invoices/'
-FONT_PATH = 'DejaVuSans.ttf'  # Update if you put the font elsewhere
+os.makedirs(INVOICE_PATH, exist_ok=True)
 
-# STREAMLIT SETTINGS
+# -------------------- STREAMLIT UI --------------------
 st.set_page_config(page_title="Store Management", layout="wide")
 st.title("New Footwear & Rice Store, Ambedkhar Centre, Velair - Inventory System with Invoice Download")
 
-# LOAD INVENTORY
+# -------------------- LOAD DATA --------------------
 if os.path.exists(DATA_PATH):
     df_inventory = pd.read_csv(DATA_PATH)
 else:
     st.error("Missing inventory.csv file!")
 
-# LOAD ORDERS
 if os.path.exists(ORDER_PATH):
     df_orders = pd.read_csv(ORDER_PATH)
 else:
     df_orders = pd.DataFrame(columns=["Invoice", "Date", "Customer", "Email", "Item", "Quantity", "Total"])
 
-# Ensure invoice folder exists
-os.makedirs(INVOICE_PATH, exist_ok=True)
-
-# TABS
+# -------------------- TABS --------------------
 tab1, tab2, tab3 = st.tabs([" Inventory", " New Order", " Order History"])
 
-# ---------------------------- TAB 1: INVENTORY ----------------------------
+# -------------------- TAB 1: INVENTORY --------------------
 with tab1:
     st.subheader(" Current Inventory")
     st.dataframe(df_inventory, use_container_width=True)
@@ -74,7 +68,7 @@ with tab1:
             df_inventory.to_csv(DATA_PATH, index=False)
             st.success(f"{add_qty} units added to {item}.")
 
-# ---------------------------- TAB 2: NEW ORDER ----------------------------
+# -------------------- TAB 2: NEW ORDER --------------------
 with tab2:
     st.subheader("Place New Order")
 
@@ -99,12 +93,12 @@ with tab2:
                     invoice_num = f"INV{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
                     date = datetime.date.today()
 
-                    # Update inventory
+                    # Update inventory and save
                     df_inventory.loc[df_inventory['Item'] == item, 'Stock'] -= qty
                     df_inventory.to_csv(DATA_PATH, index=False)
 
-                    # Add order
-                    df_orders = pd.concat([df_orders, pd.DataFrame([{
+                    # Add to orders and save
+                    new_order = pd.DataFrame([{
                         "Invoice": invoice_num,
                         "Date": date,
                         "Customer": customer,
@@ -112,17 +106,15 @@ with tab2:
                         "Item": item,
                         "Quantity": qty,
                         "Total": total
-                    }])], ignore_index=True)
+                    }])
+                    df_orders = pd.concat([df_orders, new_order], ignore_index=True)
                     df_orders.to_csv(ORDER_PATH, index=False)
 
-                    # Create PDF Invoice using fpdf2 with Unicode font
+                    # ------------------ PDF GENERATION ------------------
                     pdf_path = os.path.join(INVOICE_PATH, f"{invoice_num}.pdf")
                     pdf = FPDF()
                     pdf.add_page()
-
-                    # Add Unicode font (DejaVuSans)
                     pdf.add_font('DejaVu', '', FONT_PATH, uni=True)
-                    pdf.set_font('DejaVu', '', 12)
                     pdf.set_font('DejaVu', 'B', 14)
                     pdf.set_fill_color(230, 230, 250)
                     pdf.cell(0, 10, "Footwear & Rice Store - Customer Invoice", ln=True, align='C', fill=True)
@@ -135,8 +127,8 @@ with tab2:
                     pdf.cell(0, 8, f"Email: {email}", ln=True)
                     pdf.ln(10)
 
-                    pdf.set_fill_color(220, 220, 220)
                     pdf.set_font('DejaVu', 'B', 12)
+                    pdf.set_fill_color(220, 220, 220)
                     pdf.cell(60, 10, "Item", 1, 0, 'C', 1)
                     pdf.cell(40, 10, "Quantity", 1, 0, 'C', 1)
                     pdf.cell(40, 10, "Unit Price", 1, 0, 'C', 1)
@@ -147,14 +139,20 @@ with tab2:
                     pdf.cell(40, 10, str(qty), 1)
                     pdf.cell(40, 10, f"₹{price:.2f}", 1)
                     pdf.cell(40, 10, f"₹{total:.2f}", 1)
+
                     pdf.output(pdf_path)
 
                     with open(pdf_path, "rb") as file:
-                        st.download_button(label=" Download Invoice PDF", data=file, file_name=f"{invoice_num}.pdf")
+                        st.download_button(
+                            label=" Download Invoice PDF",
+                            data=file,
+                            file_name=f"{invoice_num}.pdf",
+                            mime="application/pdf"
+                        )
 
                     st.success(f"Order placed and invoice generated for {customer}.")
 
-# ---------------------------- TAB 3: ORDER HISTORY ----------------------------
+# -------------------- TAB 3: ORDER HISTORY --------------------
 with tab3:
     st.subheader(" Order History")
     st.dataframe(df_orders, use_container_width=True)
