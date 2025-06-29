@@ -3,19 +3,30 @@ import pandas as pd
 import datetime
 import os
 from fpdf import FPDF
+import streamlit as st
 import urllib.request
+import os
 
-FONT_PATH = 'DejaVuSans.ttf'
+# Constants
+FONT_DIR = "fonts"
+FONT_NAME = "DejaVuSans.ttf"
+FONT_PATH = os.path.join(FONT_DIR, FONT_NAME)
 
+# Make sure font directory exists
+os.makedirs(FONT_DIR, exist_ok=True)
+
+# Function to download the font if not already present
 def download_font():
-    url = 'https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf'
     if not os.path.exists(FONT_PATH):
-        st.info("Downloading font file for Unicode support...")
+        st.info("Downloading Unicode font for invoice generation...")
         try:
-            urllib.request.urlretrieve(url, FONT_PATH)
+            urllib.request.urlretrieve(
+                "https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf",
+                FONT_PATH
+            )
             st.success("Font downloaded successfully.")
         except Exception as e:
-            st.error(f"Failed to download font file: {e}")
+            st.error(f"Failed to download font: {e}")
 
 download_font()
 
