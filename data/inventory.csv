@@ -1,7 +1,7 @@
-Item	Category	Stock	Price
-Men's Shoes	Footwear	30	999
-Women's Shoes	Footwear	10	499
-Kids Shoes	Footwear	21	299
-Basmati Rice	Grains	12	21
-Sona Masoori	Grains	3	20
-Toor Dal	Pulses	7	22
+Item,Category,Stock,Price
+Men's Shoes,Footwear,30,999
+Women's Shoes,Footwear,20,899
+Kids Shoes,Footwear,15,499
+Basmati Rice,Grains,40,60
+Sona Masoori,Grains,25,45
+Toor Dal,Pulses,35,90
