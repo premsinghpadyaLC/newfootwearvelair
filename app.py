@@ -122,6 +122,7 @@ with tab2:
 
                     # Add Unicode font (DejaVuSans)
                     pdf.add_font('DejaVu', '', FONT_PATH, uni=True)
+                    pdf.set_font('DejaVu', '', 12)
                     pdf.set_font('DejaVu', 'B', 14)
                     pdf.set_fill_color(230, 230, 250)
                     pdf.cell(0, 10, "Footwear & Rice Store - Customer Invoice", ln=True, align='C', fill=True)
