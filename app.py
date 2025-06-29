@@ -12,7 +12,7 @@ os.makedirs(INVOICE_PATH, exist_ok=True)
 
 # -------------------- STREAMLIT SETTINGS --------------------
 st.set_page_config(page_title="Store Management", layout="wide")
-st.title("New Footwear & Rice Store, Ambedkhar Centre, Velair - Inventory System with Invoice Download")
+st.title("New Footwear & Rice, Ambedkhar Centre, Velair - Inventory")
 
 # -------------------- LOAD DATA --------------------
 if os.path.exists(DATA_PATH):
