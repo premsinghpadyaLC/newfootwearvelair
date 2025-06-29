@@ -48,83 +48,86 @@ with tab1:
 with tab2:
     st.subheader("Place New Order")
 
-    with st.form("order_form"):
-        customer = st.text_input("Customer Name")
-        email = st.text_input("Customer Email")
-        item = st.selectbox("Item", df_inventory['Item'])
-        qty = st.number_input("Quantity", min_value=1)
-        order_submit = st.form_submit_button("Submit Order")
+# Create form first
+with st.form("order_form"):
+    customer = st.text_input("Customer Name")
+    email = st.text_input("Customer Email")
+    item = st.selectbox("Item", df_inventory['Item'])
+    qty = st.number_input("Quantity", min_value=1)
+    order_submit = st.form_submit_button("Submit Order")
 
-        if order_submit:
-            if not customer or not email:
-                st.warning("Please enter customer name and email.")
-            else:
-                stock = int(df_inventory[df_inventory['Item'] == item]['Stock'])
-                price = float(df_inventory[df_inventory['Item'] == item]['Price'])
+# Check submission after the form ends
+if order_submit:
+    if not customer or not email:
+        st.warning("Please enter customer name and email.")
+    else:
+        stock = int(df_inventory[df_inventory['Item'] == item]['Stock'])
+        price = float(df_inventory[df_inventory['Item'] == item]['Price'])
 
-                if qty > stock:
-                    st.error("Insufficient stock.")
-                else:
-                    total = qty * price
-                    invoice_num = f"INV{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-                    date = datetime.date.today()
+        if qty > stock:
+            st.error("Insufficient stock.")
+        else:
+            total = qty * price
+            invoice_num = f"INV{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+            date = datetime.date.today()
 
-                    # Update inventory
-                    df_inventory.loc[df_inventory['Item'] == item, 'Stock'] -= qty
-                    df_inventory.to_csv(DATA_PATH, index=False)
+            # Update inventory
+            df_inventory.loc[df_inventory['Item'] == item, 'Stock'] -= qty
+            df_inventory.to_csv(DATA_PATH, index=False)
 
-                    # Add order
-                    new_order = pd.DataFrame([{
-                        "Invoice": invoice_num,
-                        "Date": date,
-                        "Customer": customer,
-                        "Email": email,
-                        "Item": item,
-                        "Quantity": qty,
-                        "Total": total
-                    }])
-                    df_orders = pd.concat([df_orders, new_order], ignore_index=True)
-                    df_orders.to_csv(ORDER_PATH, index=False)
+            # Save order
+            new_order = pd.DataFrame([{
+                "Invoice": invoice_num,
+                "Date": date,
+                "Customer": customer,
+                "Email": email,
+                "Item": item,
+                "Quantity": qty,
+                "Total": total
+            }])
+            df_orders = pd.concat([df_orders, new_order], ignore_index=True)
+            df_orders.to_csv(ORDER_PATH, index=False)
 
-                    # ------------------ PDF GENERATION ------------------
-                    pdf_path = os.path.join(INVOICE_PATH, f"{invoice_num}.pdf")
-                    pdf = FPDF()
-                    pdf.add_page()
-                    pdf.set_font("Arial", 'B', 14)
-                    pdf.set_fill_color(230, 230, 250)
-                    pdf.cell(0, 10, "Footwear & Rice Store - Customer Invoice", ln=True, align='C', fill=True)
-                    pdf.ln(8)
+            # Create invoice PDF
+            pdf_path = os.path.join(INVOICE_PATH, f"{invoice_num}.pdf")
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", 'B', 14)
+            pdf.set_fill_color(230, 230, 250)
+            pdf.cell(0, 10, "Footwear & Rice Store - Customer Invoice", ln=True, align='C', fill=True)
+            pdf.ln(8)
 
-                    pdf.set_font("Arial", '', 12)
-                    pdf.cell(0, 8, f"Invoice No: {invoice_num}", ln=True)
-                    pdf.cell(0, 8, f"Date: {date}", ln=True)
-                    pdf.cell(0, 8, f"Customer Name: {customer}", ln=True)
-                    pdf.cell(0, 8, f"Email: {email}", ln=True)
-                    pdf.ln(10)
+            pdf.set_font("Arial", '', 12)
+            pdf.cell(0, 8, f"Invoice No: {invoice_num}", ln=True)
+            pdf.cell(0, 8, f"Date: {date}", ln=True)
+            pdf.cell(0, 8, f"Customer Name: {customer}", ln=True)
+            pdf.cell(0, 8, f"Email: {email}", ln=True)
+            pdf.ln(10)
 
-                    pdf.set_fill_color(220, 220, 220)
-                    pdf.set_font("Arial", 'B', 12)
-                    pdf.cell(60, 10, "Item", 1, 0, 'C', 1)
-                    pdf.cell(40, 10, "Quantity", 1, 0, 'C', 1)
-                    pdf.cell(40, 10, "Unit Price", 1, 0, 'C', 1)
-                    pdf.cell(40, 10, "Total", 1, 1, 'C', 1)
+            pdf.set_font("Arial", 'B', 12)
+            pdf.set_fill_color(220, 220, 220)
+            pdf.cell(60, 10, "Item", 1, 0, 'C', 1)
+            pdf.cell(40, 10, "Quantity", 1, 0, 'C', 1)
+            pdf.cell(40, 10, "Unit Price", 1, 0, 'C', 1)
+            pdf.cell(40, 10, "Total", 1, 1, 'C', 1)
 
-                    pdf.set_font("Arial", '', 12)
-                    pdf.cell(60, 10, item, 1)
-                    pdf.cell(40, 10, str(qty), 1)
-                    pdf.cell(40, 10, f"Rs. {price:.2f}", 1)
-                    pdf.cell(40, 10, f"Rs. {total:.2f}", 1)
-                    pdf.output(pdf_path)
+            pdf.set_font("Arial", '', 12)
+            pdf.cell(60, 10, item, 1)
+            pdf.cell(40, 10, str(qty), 1)
+            pdf.cell(40, 10, f"Rs. {price:.2f}", 1)
+            pdf.cell(40, 10, f"Rs. {total:.2f}", 1)
+            pdf.output(pdf_path)
 
-                    with open(pdf_path, "rb") as file:
-                        st.download_button(
-                            label=" Download Invoice PDF",
-                            data=file,
-                            file_name=f"{invoice_num}.pdf",
-                            mime="application/pdf"
-                        )
+            #  Move download button OUTSIDE form
+            with open(pdf_path, "rb") as file:
+                st.download_button(
+                    label=" Download Invoice PDF",
+                    data=file,
+                    file_name=f"{invoice_num}.pdf",
+                    mime="application/pdf"
+                )
 
-                    st.success(f"Order placed and invoice generated for {customer}.")
+            st.success(f"Order placed and invoice generated for {customer}.")
 
 # -------------------- TAB 3: ORDER HISTORY --------------------
 with tab3:
