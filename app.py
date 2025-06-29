@@ -3,30 +3,6 @@ import pandas as pd
 import datetime
 import os
 from fpdf import FPDF
-import urllib.request
-
-# -------------------- FONT SETUP --------------------
-FONT_DIR = "fonts"
-FONT_NAME = "DejaVuSans.ttf"
-FONT_PATH = os.path.join(FONT_DIR, FONT_NAME)
-
-# Create font folder if needed
-os.makedirs(FONT_DIR, exist_ok=True)
-
-# Download TTF font if not exists
-def download_font():
-    if not os.path.exists(FONT_PATH):
-        st.info("Downloading Unicode font for invoice generation...")
-        try:
-            urllib.request.urlretrieve(
-                "https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf",
-                FONT_PATH
-            )
-            st.success("Font downloaded successfully.")
-        except Exception as e:
-            st.error(f"Failed to download font: {e}")
-
-download_font()
 
 # -------------------- CONFIG --------------------
 DATA_PATH = 'data/inventory.csv'
@@ -93,11 +69,11 @@ with tab2:
                     invoice_num = f"INV{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
                     date = datetime.date.today()
 
-                    # Update inventory and save
+                    # Update inventory
                     df_inventory.loc[df_inventory['Item'] == item, 'Stock'] -= qty
                     df_inventory.to_csv(DATA_PATH, index=False)
 
-                    # Add to orders and save
+                    # Add order
                     new_order = pd.DataFrame([{
                         "Invoice": invoice_num,
                         "Date": date,
@@ -114,32 +90,30 @@ with tab2:
                     pdf_path = os.path.join(INVOICE_PATH, f"{invoice_num}.pdf")
                     pdf = FPDF()
                     pdf.add_page()
-                    pdf.add_font('DejaVu', '', FONT_PATH, uni=True)
-                    pdf.set_font('DejaVu', 'B', 14)
+                    pdf.set_font("Arial", 'B', 14)
                     pdf.set_fill_color(230, 230, 250)
                     pdf.cell(0, 10, "Footwear & Rice Store - Customer Invoice", ln=True, align='C', fill=True)
                     pdf.ln(8)
 
-                    pdf.set_font('DejaVu', '', 12)
+                    pdf.set_font("Arial", '', 12)
                     pdf.cell(0, 8, f"Invoice No: {invoice_num}", ln=True)
                     pdf.cell(0, 8, f"Date: {date}", ln=True)
                     pdf.cell(0, 8, f"Customer Name: {customer}", ln=True)
                     pdf.cell(0, 8, f"Email: {email}", ln=True)
                     pdf.ln(10)
 
-                    pdf.set_font('DejaVu', 'B', 12)
                     pdf.set_fill_color(220, 220, 220)
+                    pdf.set_font("Arial", 'B', 12)
                     pdf.cell(60, 10, "Item", 1, 0, 'C', 1)
                     pdf.cell(40, 10, "Quantity", 1, 0, 'C', 1)
                     pdf.cell(40, 10, "Unit Price", 1, 0, 'C', 1)
                     pdf.cell(40, 10, "Total", 1, 1, 'C', 1)
 
-                    pdf.set_font('DejaVu', '', 12)
+                    pdf.set_font("Arial", '', 12)
                     pdf.cell(60, 10, item, 1)
                     pdf.cell(40, 10, str(qty), 1)
-                    pdf.cell(40, 10, f"₹{price:.2f}", 1)
-                    pdf.cell(40, 10, f"₹{total:.2f}", 1)
-
+                    pdf.cell(40, 10, f"Rs. {price:.2f}", 1)
+                    pdf.cell(40, 10, f"Rs. {total:.2f}", 1)
                     pdf.output(pdf_path)
 
                     with open(pdf_path, "rb") as file:
